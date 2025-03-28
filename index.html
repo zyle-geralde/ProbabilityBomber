@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Probability Bomber</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/phaser/2.0.7/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #282c34;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+
+<body>
+
+    <script type="text/javascript" src="game.js"></script>
+</body>
+
+</html>
+
+
+<!--const game = new Phaser.Game(
+    window.innerWidth,  
+    window.innerHeight,
+    Phaser.AUTO,
+    '',
+    {
+        preload: preload,
+        create: create,
+        update: update
+    }
+);
+
+let bg, wallGroup;
+const wallDim = 50;
+let cols = 13; 
+let rows = 9;  
+let totalWallWidth = cols * wallDim; 
+let totalWallHeight = rows * wallDim;
+
+function preload() {
+    game.load.image("ground", "images/image 52.png");
+    game.load.image("unbrkwall", "images/unbreakable_wall.png");
+}
+
+function create() {
+    game.physics.startSystem(Phaser.Physics.ARCADE);
+
+    // Background
+    bg = game.add.sprite(0, 0, 'ground');
+    bg.anchor.set(0.5, 0.5);
+    
+    // Wall Group
+    wallGroup = game.add.group();
+
+    // Create Walls
+    createWalls();
+
+    // Adjust everything on start
+    resizeGame();
+
+    // Listen for window resize
+    window.addEventListener("resize", resizeGame);
+}
+
+function createWalls() {
+    wallGroup.removeAll(true); // Remove previous walls
+
+    // Left Wall
+    let outsidewall = game.add.group();
+    wallGroup.add(outsidewall);
+    outsidewall.enableBody = true;
+    for (let i = 0; i < rows; i++) {
+        let wall = outsidewall.create(0, i * wallDim, 'unbrkwall');
+        wall.body.immovable = true;
+        wall.width = wallDim;
+        wall.height = wallDim;
+    }
+
+    // Top Wall
+    let topwall = game.add.group();
+    wallGroup.add(topwall);
+    topwall.enableBody = true;
+    for (let i = 0; i < cols; i++) {
+        let wall = topwall.create(i * wallDim, 0, 'unbrkwall');
+        wall.body.immovable = true;
+        wall.width = wallDim;
+        wall.height = wallDim;
+    }
+
+    // Right Wall
+    let rightwall = game.add.group();
+    wallGroup.add(rightwall);
+    rightwall.enableBody = true;
+    for (let i = 0; i < rows; i++) {
+        let wall = rightwall.create(totalWallWidth - wallDim, i * wallDim, 'unbrkwall');
+        wall.body.immovable = true;
+        wall.width = wallDim;
+        wall.height = wallDim;
+    }
+
+    // Bottom Wall
+    let bottomwall = game.add.group();
+    wallGroup.add(bottomwall);
+    bottomwall.enableBody = true;
+    for (let i = 0; i < cols; i++) {
+        let wall = bottomwall.create(i * wallDim, totalWallHeight - wallDim, 'unbrkwall');
+        wall.body.immovable = true;
+        wall.width = wallDim;
+        wall.height = wallDim;
+    }
+}
+
+function resizeGame() {
+    game.width = window.innerWidth;
+    game.height = window.innerHeight;
+
+    // ✅ Correct resizing method for Phaser 2
+    game.scale.setSize(game.width, game.height);
+
+    // Adjust background
+    bg.position.set(game.width / 2, game.height / 2);
+    let scaleX = game.width / bg.width;
+    let scaleY = game.height / bg.height;
+    let scale = Math.max(scaleX, scaleY);
+    bg.scale.setTo(scale, scale);
+
+    // Center walls
+    wallGroup.x = (game.width - totalWallWidth) / 2;
+    wallGroup.y = (game.height - totalWallHeight) / 2;
+}
+
+function update() {}-->

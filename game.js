@@ -1,0 +1,180 @@
+const game = new Phaser.Game(
+    window.innerWidth,  
+    window.innerHeight,
+    Phaser.AUTO,
+    '',
+    {
+    preload: preload,
+    create: create,
+    update: update
+})
+
+let wallGroup;
+let outsidewall;
+let topwall;
+let rightwall;
+let bottomwall;
+let cursors;
+
+function preload() {
+    game.load.image("ground", "images/image 52.png")
+    game.load.image("unbrkwall", "images/unbreakable_wall.png")
+    game.load.spritesheet('character', 'images/spritesheet (2)nncopy.png', 30, 50)
+}
+function create() {
+
+    //50x50 wall
+    const wallDim = 50
+
+    let cols = 13; // Number of columns (top/bottom walls)
+    let rows = 9;  // Number of rows (left/right walls)
+    
+    // Calculate total width and height of walls
+    let totalWallWidth = cols * wallDim; 
+    let totalWallHeight = rows * wallDim;
+    
+
+    game.physics.startSystem(Phaser.Physics.ARCADE)
+
+    let bg = game.add.sprite(0, 0, 'ground');
+    bg.anchor.set(0.5, 0.5);  //Set anchor to center
+    bg.position.set(game.width / 2, game.height / 2);  //Center image
+
+    //Maintain aspect ratio while filling the screen
+    let scaleX = game.width / bg.width;
+    let scaleY = game.height / bg.height;
+    let scale = Math.max(scaleX, scaleY);  //Use the larger scale factor
+
+    bg.scale.setTo(scale, scale);
+
+    wallGroup = game.add.group();//group of all walls
+
+
+    //-------------------------left wall------------------------------
+    outsidewall = game.add.group()
+    wallGroup.add(outsidewall);
+    outsidewall.enableBody = true//Adds physics like collisions and stuff
+
+
+    let adjustwall = wallDim
+    for (var nn = 0; nn < 9; nn++){
+        let wall = outsidewall.create(0, adjustwall, 'unbrkwall')
+        adjustwall += wallDim
+        wall.body.immovable = true//objects wont move
+        wall.width = wallDim
+        wall.height = wallDim
+
+        wall.enableBody = true
+    }
+
+    //----------------------top wall-------------------------
+    topwall = game.add.group()
+    wallGroup.add(topwall);
+    topwall.enableBody = true
+
+    let adjusttopwall = 0;
+
+    for (var nn = 0; nn < 13; nn++){
+        let wall = topwall.create(adjusttopwall,0,  'unbrkwall')
+        adjusttopwall += wallDim
+        wall.body.immovable = true//objects wont move
+        wall.width = wallDim
+        wall.height = wallDim
+
+        wall.enableBody = true
+    }
+
+
+    //0--------------------right wall-------------------------------
+    rightwall = game.add.group()
+    wallGroup.add(rightwall);
+    rightwall.enableBody = true//Adds physics like collisions and stuff
+
+
+    let adjustrightwall = wallDim
+    for (var nn = 0; nn < 9; nn++){
+        let wall = rightwall.create(totalWallWidth - wallDim, adjustrightwall, 'unbrkwall');
+        adjustrightwall += wallDim
+        wall.body.immovable = true//objects wont move
+        wall.width = wallDim
+        wall.height = wallDim
+
+        wall.enableBody = true
+    }
+
+
+    //----------------bottomwall-----------------------------------
+    bottomwall = game.add.group()
+    wallGroup.add(bottomwall);
+    bottomwall.enableBody = true
+
+    let adjustbottomwall = 0;
+
+    for (var nn = 0; nn < 13; nn++){
+        let wall = bottomwall.create(adjustbottomwall, totalWallHeight, 'unbrkwall');
+        adjustbottomwall += wallDim
+        wall.body.immovable = true//objects wont move
+        wall.width = wallDim
+        wall.height = wallDim
+
+        wall.enableBody = true
+    }
+
+
+    //center wall group position
+    wallGroup.x = (game.world.width - totalWallWidth) / 2;
+    wallGroup.y = (game.world.height - totalWallHeight) / 2;
+
+    //Player Initiallize
+    player = game.add.sprite(500, 500, 'character')
+    game.physics.arcade.enable(player)
+    //player.body.bounce.y = 0.2
+    player.body.collideWorldBounds = true
+
+    player.animations.add('left', [3,4 , 5], 10, true)
+    player.animations.add('right', [0, 1, 2], 10, true)
+    player.animations.add('stopright', [0], 10, true)
+
+    cursors = game.input.keyboard.createCursorKeys()
+
+
+}
+function update() {
+    game.physics.arcade.collide(player, bottomwall)
+    game.physics.arcade.collide(player, topwall)
+    game.physics.arcade.collide(player, rightwall)
+    game.physics.arcade.collide(player, outsidewall)
+
+
+    let lastkey = 1
+    if (cursors.left.isDown) {
+        player.body.velocity.x = -150
+        player.body.velocity.y = -0
+        lastkey = 0
+        player.animations.play('left')
+    } else if (cursors.right.isDown) {
+        player.body.velocity.x = 150
+        player.body.velocity.y = -0
+        lastkey = 1
+        player.animations.play('right')
+    } else if (cursors.up.isDown) {
+        player.body.velocity.y = -150
+        player.body.velocity.x = -0
+        lastkey = 1
+        player.animations.play('right')
+    }
+    else if (cursors.down.isDown) {
+        player.body.velocity.y = +150
+        player.body.velocity.x = -0
+        lastkey = 0
+        player.animations.play('left')
+    }else {
+        // If no movement keys are pressed, stop the player
+        player.body.velocity.x = 0
+        player.body.velocity.y = 0
+        player.animations.play('stopright')
+        player.animations.stop()
+    }
+}
+
+ 
