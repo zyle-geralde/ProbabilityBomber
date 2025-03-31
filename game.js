@@ -87,10 +87,6 @@ function create() {
 
         wall.enableBody = true
 
-        //inside walls
-        let insidetopwall = game.add.group()
-        wallGroup.add(insidetopwall);
-        insidetopwall.enableBody = true
 
         if (nn >=1 && nn<=cols-4) {
             let insidewall = wallDim +wallDim
