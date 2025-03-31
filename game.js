@@ -28,8 +28,8 @@ function create() {
     //50x50 wall
     const wallDim = 64
 
-    let cols = 20; // Number of columns (top/bottom walls)
-    let rows = 9;  // Number of rows (left/right walls)
+    let cols = 19; // Number of columns (top/bottom walls) // #columns walls should be odd
+    let rows = 8;  // Number of rows (left/right walls)// # rows walls should be even
     
     // Calculate total width and height of walls
     let totalWallWidth = cols * wallDim; 
@@ -39,17 +39,6 @@ function create() {
     game.physics.startSystem(Phaser.Physics.ARCADE)
 
     let bg = game.add.sprite(0, 0, 'ground');
-
-    //Uncomment this if needed
-    /*bg.anchor.set(0.5, 0.5);  //Set anchor to center
-    bg.position.set(game.width / 2, game.height / 2);  //Center image*/
-
-    //Maintain aspect ratio while filling the screen
-    /*let scaleX = game.width / bg.width;
-    let scaleY = game.height / bg.height;
-    let scale = Math.max(scaleX, scaleY);//Use the larger scale factor
-
-    bg.scale.setTo(scale, scale);*/
 
     wallGroup = game.add.group();//group of all walls
 
@@ -78,6 +67,8 @@ function create() {
 
     let adjusttopwall = 0;
 
+    //indicates if a column will be skipped
+    let skipColumn = false
     for (var nn = 0; nn < cols; nn++){
         let wall = topwall.create(adjusttopwall,0,  'unbrkwall')
         adjusttopwall += wallDim
@@ -88,17 +79,32 @@ function create() {
         wall.enableBody = true
 
 
-        if (nn >=1 && nn<=cols-4) {
-            let insidewall = wallDim +wallDim
-            for (var bb = 1; bb <= rows-3; bb++){
-                let wall = topwall.create(adjusttopwall,insidewall,  'unbrkwall')
-                insidewall+=wallDim
-                wall.body.immovable = true//objects wont move
-                wall.width = wallDim
-                wall.height = wallDim
-        
-                wall.enableBody = true
+        //generate inner walls per column
+        if (nn >=1 && nn<=cols-4 && skipColumn == false) {
+            let insidewall = wallDim + wallDim
+
+            //indicates if wall will be places
+            let putWall = true;
+            for (var bb = 1; bb <= rows - 3; bb++){
+                if (putWall) {
+                    let wall = topwall.create(adjusttopwall,insidewall,  'unbrkwall')
+                    insidewall+=wallDim
+                    wall.body.immovable = true//objects wont move
+                    wall.width = wallDim
+                    wall.height = wallDim
+            
+                    wall.enableBody = true
+                    putWall = false
+                }
+                else {
+                    insidewall += wallDim
+                    putWall = true
+                }
             }
+            skipColumn = true
+        }
+        else {
+            skipColumn = false
         }
     }
 
@@ -151,7 +157,7 @@ function create() {
     //--------------------------------------Player Initiallize------------------------------
     player = game.add.sprite(500, 500, 'character')
     game.physics.arcade.enable(player)
-    player.scale.setTo(45 / player.width, 64 / player.height); //change player height and width
+    player.scale.setTo(39 / player.width, 55 / player.height); //change player height and width
     //player.body.bounce.y = 0.2
     player.body.collideWorldBounds = true
 
