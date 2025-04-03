@@ -1,231 +1,211 @@
-const game = new Phaser.Game(
-    window.innerWidth,  
-    window.innerHeight,
-    Phaser.AUTO,
-    '',
-    {
-    preload: preload,
-    create: create,
-    update: update
-})
 
-let wallGroup;
-let outsidewall;
-let topwall;
-let rightwall;
-let bottomwall;
-let cursors;
-
-function preload() {
-    game.load.image("ground", "images/image 52.png")
-    game.load.image("unbrkwall", "images/unbreakable_wall.png")
-    game.load.spritesheet('character', 'images/spritesheet (2)nncopy.png', 30, 50)
-}
-function create() {
-
-    game.world.setBounds(0, 0, 2000, 2000);
-
-    //50x50 wall
-    const wallDim = 64
-
-    let cols = 19; // Number of columns (top/bottom walls) // #columns walls should be odd
-    let rows = 8;  // Number of rows (left/right walls)// # rows walls should be even
-    
-    // Calculate total width and height of walls
-    let totalWallWidth = cols * wallDim; 
-    let totalWallHeight = rows * wallDim;
-    
-
-    game.physics.startSystem(Phaser.Physics.ARCADE)
-
-    let bg = game.add.sprite(0, 0, 'ground');
-
-    wallGroup = game.add.group();//group of all walls
-
-
-    //-------------------------left wall------------------------------
-    outsidewall = game.add.group()
-    wallGroup.add(outsidewall);
-    outsidewall.enableBody = true//Adds physics like collisions and stuff
-
-
-    let adjustwall = wallDim
-    for (var nn = 0; nn < rows; nn++){
-        let wall = outsidewall.create(0, adjustwall, 'unbrkwall')
-        adjustwall += wallDim
-        wall.body.immovable = true//objects wont move
-        wall.width = wallDim
-        wall.height = wallDim
-
-        wall.enableBody = true
+  class GameScene extends Phaser.Scene {
+    constructor() {
+      super({ key: 'GameScene' });
+      this.wallGroup = null;
+      this.player = null;
+      this.cursors = null;
+      this.wallDim = 64;
+      this.cols = 19;
+      this.rows = 8;
+      this.totalWallWidth = this.cols * this.wallDim;
+      this.totalWallHeight = this.rows * this.wallDim;
+      this.speed = 150;
+      this.cameraSpeed = 200;
+      this.outsidewall = null;
+      this.topwall = null;
+      this.rightwall = null;
+      this.bottomwall = null;
     }
+  
+    preload() {
+      this.load.image("ground", "images/image 52.png");
+      this.load.image("unbrkwall", "images/unbreakable_wall.png");
+      this.load.spritesheet('character', 'images/spritesheet (2)nncopy.png', { frameWidth: 30, frameHeight: 50 });
+    }
+  
+    create() {
+      this.physics.world.setBounds(0, 0, 2000, 2000);
+  
+      this.createBackground();
+      this.createWalls();
+      this.createPlayer();
+  
+      this.cursors = this.input.keyboard.createCursorKeys();
+    }
+  
+    update() {
+      this.handleCollisions();
+      this.handlePlayerMovement();
+      this.handleCameraMovement();
+    }
+  
+    createBackground() {
+      this.add.sprite(-500, -500, 'ground').setOrigin(0, 0);
+    }
+    createWalls() {
+        this.wallGroup = this.physics.add.group();
+      
+        this.createLeftWall();
+        this.createTopWall();
+        this.createRightWall();
+        this.createBottomWall();
+      
+        // Calculate the center position
+        const centerX = (window.innerWidth - this.totalWallWidth) / 2;
+        const centerY = 100; // or any desired y-position
+      
+        // Set the wall group's position
+        this.wallGroup.x = centerX;
+        this.wallGroup.y = centerY;
+      
+        // Adjust children positions to be relative to the group
+        this.wallGroup.children.iterate(wall => {
+          wall.x += centerX;
+          wall.y += centerY;
+        });
+      }
+  
+    createLeftWall() {
+        this.outsidewall = this.physics.add.group({ immovable: true });
+    
+        let adjustwall = this.wallDim;
+        for (let nn = 0; nn < this.rows; nn++) {
+            let wall = this.outsidewall.create(0, adjustwall, 'unbrkwall');
+            adjustwall+=this.wallDim
+            wall.body.setSize(this.wallDim, this.wallDim);
+          wall.setDisplaySize(this.wallDim, this.wallDim); // Corrected line
+        }
 
-    //----------------------top wall-------------------------
-    topwall = game.add.group()
-    wallGroup.add(topwall);
-    topwall.enableBody = true
 
-    let adjusttopwall = 0;
-
-    //indicates if a column will be skipped
-    let skipColumn = false
-    for (var nn = 0; nn < cols; nn++){
-        let wall = topwall.create(adjusttopwall,0,  'unbrkwall')
-        adjusttopwall += wallDim
-        wall.body.immovable = true//objects wont move
-        wall.width = wallDim
-        wall.height = wallDim
-
-        wall.enableBody = true
-
-
-        //generate inner walls per column
-        if (nn >=1 && nn<=cols-4 && skipColumn == false) {
-            let insidewall = wallDim + wallDim
-
-            //indicates if wall will be places
+      }
+    
+      createTopWall() {
+        this.topwall = this.physics.add.group({ immovable: true });
+    
+        let adjusttopwall = 0;
+        let skipColumn = false;
+    
+        for (let nn = 0; nn < this.cols; nn++) {
+            let wall = this.topwall.create(adjusttopwall, 0, 'unbrkwall');
+            adjusttopwall+=this.wallDim
+          wall.body.setSize(this.wallDim, this.wallDim);
+          wall.setDisplaySize(this.wallDim, this.wallDim); // Corrected line
+    
+          if (nn >= 1 && nn <= this.cols - 4 && !skipColumn) {
+            let insidewall = this.wallDim * 2;
             let putWall = true;
-            for (var bb = 1; bb <= rows - 3; bb++){
-                if (putWall) {
-                    let wall = topwall.create(adjusttopwall,insidewall,  'unbrkwall')
-                    insidewall+=wallDim
-                    wall.body.immovable = true//objects wont move
-                    wall.width = wallDim
-                    wall.height = wallDim
-            
-                    wall.enableBody = true
-                    putWall = false
-                }
-                else {
-                    insidewall += wallDim
-                    putWall = true
-                }
-            }
-            skipColumn = true
-        }
-        else {
-            skipColumn = false
-        }
-    }
-
-
-    //--------------------right wall-------------------------------
-    rightwall = game.add.group()
-    wallGroup.add(rightwall);
-    rightwall.enableBody = true//Adds physics like collisions and stuff
-
-
-    let adjustrightwall = wallDim
-    for (var nn = 0; nn < rows; nn++){
-        let wall = rightwall.create(totalWallWidth - wallDim, adjustrightwall, 'unbrkwall');
-        adjustrightwall += wallDim
-        wall.body.immovable = true//objects wont move
-        wall.width = wallDim
-        wall.height = wallDim
-
-        wall.enableBody = true
-    }
-
-
-    //----------------bottomwall-----------------------------------
-    bottomwall = game.add.group()
-    wallGroup.add(bottomwall);
-    bottomwall.enableBody = true
-
-    let adjustbottomwall = 0;
-
-    for (var nn = 0; nn < cols; nn++){
-        let wall = bottomwall.create(adjustbottomwall, totalWallHeight, 'unbrkwall');
-        adjustbottomwall += wallDim
-        wall.body.immovable = true//objects wont move
-        wall.width = wallDim
-        wall.height = wallDim
-
-        wall.enableBody = true
-    }
-
-
-    //center wall group position
-    /*wallGroup.x = (game.world.width - totalWallWidth) / 2;
-    wallGroup.y = (game.world.height - totalWallHeight) / 2;*/
-
-    wallGroup.x = (window.innerWidth- totalWallWidth) / 2;
-    wallGroup.y = 100;
-
     
-
-    //--------------------------------------Player Initiallize------------------------------
-    player = game.add.sprite(500, 500, 'character')
-    game.physics.arcade.enable(player)
-    player.scale.setTo(39 / player.width, 55 / player.height); //change player height and width
-    //player.body.bounce.y = 0.2
-    player.body.collideWorldBounds = true
-
-    player.animations.add('left', [3,4 , 5], 10, true)
-    player.animations.add('right', [0, 1, 2], 10, true)
-    player.animations.add('stopright', [0], 10, true)
-
-    cursors = game.input.keyboard.createCursorKeys()
-
-
-}
-function update() {
-    game.physics.arcade.collide(player, bottomwall)
-    game.physics.arcade.collide(player, topwall)
-    game.physics.arcade.collide(player, rightwall)
-    game.physics.arcade.collide(player, outsidewall)
-
-
-    let speed = 150; // Player movement speed
-    let cameraSpeed = 200; // Camera movement speed
-
-    if (cursors.left.isDown) {
-        player.body.velocity.x = -speed;
-        player.body.velocity.y = 0;
-        player.animations.play('left');
-        
-        // Move camera only if player reaches left boundary
-        if (player.x < game.camera.x + 500) {
-            game.camera.x -= cameraSpeed * game.time.physicsElapsed;
-        }
-    } 
-    else if (cursors.right.isDown) {
-        player.body.velocity.x = speed;
-        player.body.velocity.y = 0;
-        player.animations.play('right');
-
-        // Move camera only if player reaches right boundary
-        if (player.x > game.camera.x + game.width - 500) {
-            game.camera.x += cameraSpeed * game.time.physicsElapsed;
-        }
-    } 
-    else if (cursors.up.isDown) {
-        player.body.velocity.y = -speed;
-        player.body.velocity.x = 0;
-        player.animations.play('right');
-
-        // Move camera only if player reaches top boundary
-        if (player.y < game.camera.y + 300) {
-            game.camera.y -= cameraSpeed * game.time.physicsElapsed;
-        }
-    } 
-    else if (cursors.down.isDown) {
-        player.body.velocity.y = speed;
-        player.body.velocity.x = 0;
-        player.animations.play('left');
-
-        // Move camera only if player reaches bottom boundary
-        if (player.y > game.camera.y + game.height - 300) {
-            game.camera.y += cameraSpeed * game.time.physicsElapsed;
-        }
-    } 
-    else {
-        // Stop player when no key is pressed
-        player.body.velocity.x = 0;
-        player.body.velocity.y = 0;
-        player.animations.stop();
-        player.animations.play('stopright');
+            for (let bb = 1; bb <= this.rows - 3; bb++) {
+              if (putWall) {
+                  let innerWall = this.topwall.create(adjusttopwall, insidewall, 'unbrkwall');
+                  insidewall+=this.wallDim
+                innerWall.body.setSize(this.wallDim, this.wallDim);
+                innerWall.setDisplaySize(this.wallDim, this.wallDim); // Corrected line
+                putWall = false;
+              } else {
+                insidewall += this.wallDim;
+                putWall = true;
+              }
+            }
+            skipColumn = true;
+          } else {
+            skipColumn = false;
+          }
+          }
+      }
+    
+      createRightWall() {
+        this.rightwall = this.physics.add.group({ immovable: true });
+    
+        let adjustrightwall = this.wallDim;
+        for (let nn = 0; nn < this.rows; nn++) {
+            let wall = this.rightwall.create(this.totalWallWidth - this.wallDim, adjustrightwall, 'unbrkwall');
+            adjustrightwall+=this.wallDim
+          wall.body.setSize(this.wallDim, this.wallDim);
+          wall.setDisplaySize(this.wallDim, this.wallDim); // Corrected line
+          }
+          
+      }
+    
+      createBottomWall() {
+        this.bottomwall = this.physics.add.group({ immovable: true });
+    
+        let adjustbottomwall = 0;
+        for (let nn = 0; nn < this.cols; nn++) {
+            let wall = this.bottomwall.create(adjustbottomwall, this.totalWallHeight, 'unbrkwall');
+            adjustbottomwall+=this.wallDim
+          wall.body.setSize(this.wallDim, this.wallDim);
+          wall.setDisplaySize(this.wallDim, this.wallDim); // Corrected line
+          }
+      }
+  
+    createPlayer() {
+      this.player = this.physics.add.sprite(500, 500, 'character');
+      this.player.setScale(37 / 30, 50 / 50);
+      this.player.setCollideWorldBounds(true);
+  
+      this.anims.create({ key: 'left', frames: this.anims.generateFrameNumbers('character', { start: 3, end: 5 }), frameRate: 10, repeat: -1 });
+      this.anims.create({ key: 'right', frames: this.anims.generateFrameNumbers('character', { start: 0, end: 2 }), frameRate: 10, repeat: -1 });
+      this.anims.create({ key: 'stopright', frames: [{ key: 'character', frame: 0 }], frameRate: 10, repeat: -1 });
     }
-}
-
- 
+  
+    handleCollisions() {
+      this.physics.add.collider(this.player, this.outsidewall);
+      this.physics.add.collider(this.player, this.topwall);
+      this.physics.add.collider(this.player, this.rightwall);
+      this.physics.add.collider(this.player, this.bottomwall);
+    }
+  
+    handlePlayerMovement() {
+      if (this.cursors.left.isDown) {
+        this.player.setVelocityX(-this.speed);
+        this.player.setVelocityY(0);
+        this.player.anims.play('left', true);
+      } else if (this.cursors.right.isDown) {
+        this.player.setVelocityX(this.speed);
+        this.player.setVelocityY(0);
+        this.player.anims.play('right', true);
+      } else if (this.cursors.up.isDown) {
+        this.player.setVelocityY(-this.speed);
+        this.player.setVelocityX(0);
+        this.player.anims.play('right', true);
+      } else if (this.cursors.down.isDown) {
+        this.player.setVelocityY(this.speed);
+        this.player.setVelocityX(0);
+        this.player.anims.play('left', true);
+      } else {
+        this.player.setVelocityX(0);
+        this.player.setVelocityY(0);
+        this.player.anims.play('stopright');
+      }
+    }
+  
+    handleCameraMovement() {
+      if (this.cursors.left.isDown && this.player.x < this.cameras.main.scrollX + 500) {
+        this.cameras.main.scrollX -= this.cameraSpeed * this.game.loop.delta / 1000;
+      } else if (this.cursors.right.isDown && this.player.x > this.cameras.main.scrollX + this.cameras.main.width - 500) {
+        this.cameras.main.scrollX += this.cameraSpeed * this.game.loop.delta / 1000;
+      } else if (this.cursors.up.isDown && this.player.y < this.cameras.main.scrollY + 300) {
+        this.cameras.main.scrollY -= this.cameraSpeed * this.game.loop.delta / 1000;
+      } else if (this.cursors.down.isDown && this.player.y > this.cameras.main.scrollY + this.cameras.main.height - 300) {
+        this.cameras.main.scrollY += this.cameraSpeed * this.game.loop.delta / 1000;
+      }
+    }
+  }
+  
+  const config = {
+    type: Phaser.AUTO,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    physics: {
+      default: 'arcade',
+      arcade: {
+        gravity: { y: 0 },
+        debug: false,
+      },
+    },
+    scene: GameScene,
+  };
+  
+  const game = new Phaser.Game(config);
