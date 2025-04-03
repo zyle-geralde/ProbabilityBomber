@@ -11,7 +11,7 @@
       this.totalWallWidth = this.cols * this.wallDim;
       this.totalWallHeight = this.rows * this.wallDim;
       this.speed = 150;
-      this.cameraSpeed = 200;
+      this.cameraSpeed = 150;
       this.outsidewall = null;
       this.topwall = null;
       this.rightwall = null;
@@ -142,7 +142,7 @@
   
     createPlayer() {
       this.player = this.physics.add.sprite(500, 500, 'character');
-      this.player.setScale(37 / 30, 50 / 50);
+      this.player.setScale(48 / 30, 70 / 50);
       this.player.setCollideWorldBounds(true);
   
       this.anims.create({ key: 'left', frames: this.anims.generateFrameNumbers('character', { start: 3, end: 5 }), frameRate: 10, repeat: -1 });
